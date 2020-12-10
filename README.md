@@ -52,7 +52,8 @@ and use `sa` as login and password. Use `jdbc:h2:mem:testdb` as database url and
 driver class.
 
 ## A copy of the stackoverflow question
-I have a rest service that consume json from an Angular UI and also from other rest clients. The data based on a complex structure of Entities ~50 that are stored in a Database with ~50 Tables. The problem are the optional OneToOne relations, because Angular send the optional objects as empty definitions like ``"car": {},``. Thehe spring data repository saves them as empty entries and I got a Json response like ``"car": {"id": 545234, "version": 0}`` back. I found no Jackson annotation to ignore empty objects, only empty or null properties. 
+
+I have a rest [service][1] that consume json from an Angular UI and also from other rest clients. The data based on a complex structure of entities ~50 that are stored in a database with ~50 tables. The problem are the optional OneToOne relations, because Angular send the optional objects as empty definitions like ``"car": {},``. The spring data repository saves them as empty entries and I got a Json response like ``"car": {"id": 545234, "version": 0}`` back. I found no Jackson annotation to ignore empty objects, only empty or null properties. 
 
 The Employee Entity has the following form:
 
@@ -160,7 +161,7 @@ and I got as response the saved data
 
 As seen in the response I got empty table rows with an id, a version, many null values and empty strings, because when I save (persist) the main deserialized company class, the other entity are also saved, because the are annotated as cascading.
 
-I found many examples like [https://stackoverflow.com/questions/53234727/do-not-include-empty-object-to-jackson][1] , with a concrete pojo and a concrete deserializer that are working, but every entity needs his own Deserializer. This causes many work for the current entities and the new ones in the future (only the optional entities). 
+I found many examples like [https://stackoverflow.com/questions/53234727/do-not-include-empty-object-to-jackson][2] , with a concrete pojo and a concrete deserializer that are working, but every entity needs his own Deserializer. This causes many work for the current entities and the new ones in the future (only the optional entities). 
 
 
 I tried the folowing, I write a ``BeanDeserializerModifier`` and try to wrap an own deserializer over the standard beandeserializer:
@@ -189,7 +190,6 @@ I tried the folowing, I write a ``BeanDeserializerModifier`` and try to wrap an 
 
 And here is the wrapper (and the mistake):
 
-===
     public class DeserializationWrapper extends JsonDeserializer<Object> {
     private static final Logger logger = LoggerFactory.getLogger( DeserializationWrapper.class );
 
@@ -230,14 +230,11 @@ And here is the wrapper (and the mistake):
       .     I try to wrap the calls to the deserializer
       .
 
-
-
 The Deserialization Wrapper does not work and crash after the first call with an exception ```com.fasterxml.jackson.databind.exc.MismatchedInputException: No _valueDeserializer assigned
  at [Source: (PushbackInputStream); line: 2, column: 11] (through reference chain: ... Company["name"])``` 
 
-My question: is there a way to extend the behaviour of the working standard deserializer in the way, that the deserializer detect while parsing, that the current jsonNode is empty and return null instead the empty class instance? Perhaps my Idea is wrong and there is a completly other solution? 
+My question: is there a way to extend the behavior of the working standard deserializer in the way,
+that the deserializer detect while parsing, that the current jsonNode is empty and return null 
+instead the empty class instance? Perhaps my Idea is wrong and there is a completely other solution? 
 
 Solving it on the Angular UI side is no option. We use Jackson 2.9.5.
-
-
-  [1]: https://stackoverflow.com/questions/53234727/do-not-include-empty-object-to-jackson
