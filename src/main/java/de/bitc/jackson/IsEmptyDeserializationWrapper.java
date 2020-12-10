@@ -42,6 +42,7 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 			logger.debug("deserializeFromObject");
 			return deserializeFromObject(p, ctxt);
 		}
+		logger.debug("_deserializeOther");
 		return _deserializeOther(p, ctxt, p.getCurrentToken());
 
 	}
