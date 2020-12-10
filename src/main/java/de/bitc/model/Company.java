@@ -8,8 +8,10 @@ import javax.persistence.Version;
 
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+@JsonIgnoreProperties("new")
 @Entity
 public class Company extends AbstractPersistable<Long> {
 

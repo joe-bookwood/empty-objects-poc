@@ -8,7 +8,9 @@ import javax.persistence.Version;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties("new")
 @Entity
 public class Car extends AbstractPersistable<Long> {
 
