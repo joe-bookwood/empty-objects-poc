@@ -44,7 +44,7 @@ and the answer looks like:
 	  }
 	}
 
-The empty object `car` is stored in the database. This is unwanted.
+The empty object `car` is stored in the database and has no payload, because name is empty. This is unwanted.
 
 ### Access the in memory Database
 
