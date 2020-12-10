@@ -3,6 +3,8 @@ package de.bitc.emptyobjectspoc;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -31,6 +33,8 @@ import de.bitc.model.Employee;
 @EntityScan(basePackages = { "de.bitc.model" })
 public class EmptyObjectsPocApplication {
 
+	private static final Logger logger = LoggerFactory.getLogger(EmptyObjectsPocApplication.class);
+
 	public static void main(String[] args) {
 		SpringApplication.run(EmptyObjectsPocApplication.class, args);
 	}
@@ -54,10 +58,10 @@ public class EmptyObjectsPocApplication {
 					JsonDeserializer<?> deserializer) {
 				final Class<?> beanClass = beanDesc.getBeanClass();
 				if (beanClass == Car.class || beanClass == Employee.class) {
-					// logger.debug("is empty deserializer {}", beanClass.getSimpleName());
+					logger.debug("is empty deserializer {}", beanClass.getSimpleName());
 					return new IsEmptyDeserializationWrapper((BeanDeserializerBase) deserializer);
 				}
-				// logger.debug("set std deserializer {}", beanClass.getSimpleName());
+				logger.debug("set std deserializer {}", beanClass.getSimpleName());
 				return super.modifyDeserializer(config, beanDesc, deserializer);
 			}
 		});

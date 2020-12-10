@@ -54,7 +54,7 @@ driver class.
 
 ## A copy of the stackoverflow question
 
-I have a rest [service][1] that consume json from an Angular UI and also from other rest clients. The data based on a complex structure of entities ~50 that are stored in a database with ~50 tables. The problem are the optional OneToOne relations, because Angular send the optional objects as empty definitions like ``"car": {},``. The spring data repository saves them as empty entries and I got a Json response like ``"car": {"id": 545234, "version": 0}`` back. I found no Jackson annotation to ignore empty objects, only empty or null properties. 
+I have a rest service] that consume json from an Angular UI and also from other rest clients. The data based on a complex structure of entities ~50 that are stored in a database with ~50 tables. The problem are the optional OneToOne relations, because Angular send the optional objects as empty definitions like ``"car": {},``. The spring data repository saves them as empty entries and I got a Json response like ``"car": {"id": 545234, "version": 0}`` back. I found no Jackson annotation to ignore empty objects, only empty or null properties. 
 
 The Employee Entity has the following form:
 
@@ -162,7 +162,7 @@ and I got as response the saved data
 
 As seen in the response I got empty table rows with an id, a version, many null values and empty strings, because when I save (persist) the main deserialized company class, the other entity are also saved, because the are annotated as cascading.
 
-I found many examples like [https://stackoverflow.com/questions/53234727/do-not-include-empty-object-to-jackson][2] , with a concrete pojo and a concrete deserializer that are working, but every entity needs his own Deserializer. This causes many work for the current entities and the new ones in the future (only the optional entities). 
+I found many examples like [https://stackoverflow.com/questions/53234727/do-not-include-empty-object-to-jackson](do not include empty object to jackson) , with a concrete pojo and a concrete deserializer that are working, but every entity needs his own Deserializer. This causes many work for the current entities and the new ones in the future (only the optional entities). 
 
 
 I tried the folowing, I write a ``BeanDeserializerModifier`` and try to wrap an own deserializer over the standard beandeserializer:

@@ -28,7 +28,7 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 			logger.debug("Vanilla Processing!");
 			return isEmptyVanillaDeserialize(p, ctxt);
 		}
-
+		logger.debug("Normal Processing!");
 		return super.deserialize(p, ctxt);
 	}
 
