@@ -35,6 +35,11 @@ public class EmptyObjectsPocApplication {
 		SpringApplication.run(EmptyObjectsPocApplication.class, args);
 	}
 
+	/**
+	 * Jackson configuration
+	 * 
+	 * @return the configuration
+	 */
 	@Bean
 	public Jackson2ObjectMapperFactoryBean jackson2ObjectMapperFactoryBean() {
 		List<Module> modules = new ArrayList<Module>();

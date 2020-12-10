@@ -5,7 +5,53 @@ This POC is used to solve the problem, that Jackson is not able to exclude empty
 This cause empty entries in the database. The problem ist discussed at 
 [Stackoverflow](https://stackoverflow.com/questions/65130489/how-ignore-empty-json-objects-like-car-that-cause-empty-pojos-after-deseri)
 
-## Copy of the stackoverflow question
+
+## The configuration
+
+The important classes to solve the problem:
+
+*   Jackson configuration is located in `de.bitc.emptyobjectspoc.EmptyObjectsPocApplication`
+*   The wrapped bean deserializer is located in `de.bitc.jackson.IsEmptyDeserializationWrapper`
+
+## Build and run
+To build this project `java 11` and `maven` is needed.
+At first enter the main folder `empty-objects-poc`. To build the app, run `mvn -DskipTests package`,
+skip the tests, because the test will fail. The test check the correct answer without empty objects from the rest controller. To run the test use `mvn test` or `mvn package`. 
+
+To run the app use `java -jar target/empty-objects-poc-0.0.1-SNAPSHOT.jar` .
+
+To send a test json:
+
+	curl -iX POST -H 'Content-Type: application/json' \
+	  -d '{"name" : "ACME", "employee" : { "name " : "worker1", "car" : {}}}' \
+	   http://localhost:8080/company
+
+Keep the focus on the empty json object `"car" : {}`, it will be stored in the database as empty object
+and the answer looks like:
+
+	{
+	  "id" : 1,
+	  "version" : 0,
+	  "name" : "ACME",
+	  "employee" : {
+	    "id" : 2,
+	    "version" : 0,
+	    "car" : {
+	      "id" : 3,
+	      "version" : 0
+	    }
+	  }
+	}
+
+The empty object `car` is stored in the database. This is unwanted.
+
+### Access the in memory Database
+
+To verify the stored Data you can access the `h2` SQL database via `http://127.0.0.1:8080/h2-console/`
+and use `sa` as login and password. Use `jdbc:h2:mem:testdb` as database url and `org.h2.Driver` as
+driver class.
+
+## A copy of the stackoverflow question
 I have a rest service that consume json from an Angular UI and also from other rest clients. The data based on a complex structure of Entities ~50 that are stored in a Database with ~50 Tables. The problem are the optional OneToOne relations, because Angular send the optional objects as empty definitions like ``"car": {},``. Thehe spring data repository saves them as empty entries and I got a Json response like ``"car": {"id": 545234, "version": 0}`` back. I found no Jackson annotation to ignore empty objects, only empty or null properties. 
 
 The Employee Entity has the following form:
