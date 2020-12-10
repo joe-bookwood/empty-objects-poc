@@ -18,7 +18,29 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 		super(src);
 		// TODO Auto-generated constructor stub
 	}	
+	
+    @Override
+    public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        logger.debug("deserialize in wrapper ");
+        if (p.isExpectedStartObjectToken()) {
 
+            if (_vanillaProcessing) {
+                logger.debug("vanilla processing");
+                return isEmptyVanillaDeserialize(p, ctxt);
+            }
+            p.nextToken();
+            if (_objectIdReader != null) {
+                final Object o = deserializeWithObjectId(p, ctxt);
+                return o;
+            }
+            final Object o = deserializeFromObjectIfIsNotEmpty(p, ctxt);
+            return o;
+        }
+        logger.debug("nornmal processing");
+        final Object deserialize = super.deserialize(p, ctxt);
+        return deserialize;
+    }
+	
     private Object isEmptyVanillaDeserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         p.nextToken();
         if (p.hasTokenId(JsonTokenId.ID_FIELD_NAME)) {
