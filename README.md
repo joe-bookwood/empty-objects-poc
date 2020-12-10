@@ -23,7 +23,7 @@ To run the app use `java -jar target/empty-objects-poc-0.0.1-SNAPSHOT.jar` .
 To send a test json:
 
 	curl -iX POST -H 'Content-Type: application/json' \
-	  -d '{"name" : "ACME", "employee" : { "name " : "worker1", "car" : {}}}' \
+	  -d '{"name" : "ACME", "employee" : { "name" : "worker1", "car" : {}}}' \
 	   http://localhost:8080/company
 
 Keep the focus on the empty json object `"car" : {}`, it will be stored in the database as empty object
@@ -36,6 +36,7 @@ and the answer looks like:
 	  "employee" : {
 	    "id" : 2,
 	    "version" : 0,
+	    "name" : "worker1",
 	    "car" : {
 	      "id" : 3,
 	      "version" : 0
