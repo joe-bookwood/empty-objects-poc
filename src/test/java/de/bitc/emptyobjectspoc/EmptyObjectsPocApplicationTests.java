@@ -25,7 +25,7 @@ class EmptyObjectsPocApplicationTests {
 
 	@Test
 	public void postCompanyTest() throws Exception {
-		String json = "{\"name\" : \"ACME\", \"employee\" : { \"name \" : \"worker1\", \"car\" : {}}}";
+		String json = "{\"name\" : \"ACME\", \"employee\" : { \"name\" : \"worker1\", \"car\" : {}}}";
 		String baseUrl = "http://localhost:" + port + "/company";
 		URI uri = new URI(baseUrl);
 		HttpHeaders headers = new HttpHeaders();
@@ -35,6 +35,7 @@ class EmptyObjectsPocApplicationTests {
 
 		String jsonResult = restTemplate.postForObject(uri, request, String.class);
 		assertEquals("{\n  \"id\" : 1,\n  \"version\" : 0,\n  \"name\" : \"ACME\",\n"
-				+ "  \"employee\" : {\n    \"id\" : 2,\n    \"version\" : 0\n  }\n}", jsonResult);
+				+ "  \"employee\" : {\n    \"id\" : 2,\n    \"version\" : 0\n    \"name\" : \"worker1\",\n" + "  }\n}",
+				jsonResult);
 	}
 }
