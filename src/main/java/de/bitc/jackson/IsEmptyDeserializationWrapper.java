@@ -14,9 +14,10 @@ import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
 
 public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 
+	private static final long serialVersionUID = -740637402884972568L;
+
 	private static final Logger logger = LoggerFactory.getLogger(IsEmptyDeserializationWrapper.class);
 
-	private static final long serialVersionUID = -740637402884972568L;
 
 	public IsEmptyDeserializationWrapper(BeanDeserializerBase src) {
 		super(src);
@@ -24,12 +25,25 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 
 	@Override
 	public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-		if (_vanillaProcessing) {
-			logger.debug("Vanilla Processing!");
-			return isEmptyVanillaDeserialize(p, ctxt);
+		// common case first
+		if (p.isExpectedStartObjectToken()) {
+			logger.debug("p.isExpectedStartObjectToken");
+			if (_vanillaProcessing) {
+				logger.debug("Vanilla Processing!");
+				return super.deserialize(p, ctxt);
+			}
+			// 23-Sep-2015, tatu: This is wrong at some many levels, but for now... it is
+			// what it is, including "expected behavior".
+			p.nextToken();
+			if (_objectIdReader != null) {
+				logger.debug("deserializeWithObjectId");
+				return deserializeWithObjectId(p, ctxt);
+			}
+			logger.debug("deserializeFromObject");
+			return deserializeFromObject(p, ctxt);
 		}
-		logger.debug("Normal Processing!");
-		return super.deserialize(p, ctxt);
+		return _deserializeOther(p, ctxt, p.getCurrentToken());
+
 	}
 
 	private Object isEmptyVanillaDeserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
