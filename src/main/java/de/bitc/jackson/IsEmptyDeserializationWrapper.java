@@ -34,7 +34,6 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 			if (_vanillaProcessing) {
 				logger.debug("Vanilla Processing!");
 				return isEmptyVanillaDeserialize(p, ctxt);
-				// return vanillaDeserialize(p, ctxt, p.nextToken());
 			}
 
 			// 23-Sep-2015, tatu: This is wrong at some many levels, but for now... it is
