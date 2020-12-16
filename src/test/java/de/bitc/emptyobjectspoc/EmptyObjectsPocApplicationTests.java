@@ -35,7 +35,7 @@ class EmptyObjectsPocApplicationTests {
 
 		String jsonResult = restTemplate.postForObject(uri, request, String.class);
 		assertEquals("{\n  \"id\" : 1,\n  \"version\" : 0,\n  \"name\" : \"ACME\",\n"
-				+ "  \"employee\" : {\n    \"id\" : 2,\n    \"version\" : 0\n    \"name\" : \"worker1\",\n" + "  }\n}",
+				+ "  \"employee\" : {\n    \"id\" : 2,\n    \"version\" : 0,\n    \"name\" : \"worker1\"\n" + "  }\n}",
 				jsonResult);
 	}
 }

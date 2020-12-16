@@ -21,17 +21,22 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 
 	public IsEmptyDeserializationWrapper(BeanDeserializerBase src) {
 		super(src);
+		_vanillaProcessing = true;
 	}
 
 	@Override
 	public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+
+		// _vanillaProcessing = true;
 		// common case first
 		if (p.isExpectedStartObjectToken()) {
 			logger.debug("p.isExpectedStartObjectToken");
 			if (_vanillaProcessing) {
 				logger.debug("Vanilla Processing!");
-				return super.deserialize(p, ctxt);
+				return isEmptyVanillaDeserialize(p, ctxt);
+				// return vanillaDeserialize(p, ctxt, p.nextToken());
 			}
+
 			// 23-Sep-2015, tatu: This is wrong at some many levels, but for now... it is
 			// what it is, including "expected behavior".
 			p.nextToken();
@@ -45,6 +50,32 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 		logger.debug("_deserializeOther");
 		return _deserializeOther(p, ctxt, p.getCurrentToken());
 
+	}
+
+	private Object isEmptyVanillaDeserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+		p.nextToken();
+		if (p.hasTokenId(JsonTokenId.ID_FIELD_NAME)) {
+			final Object bean = _valueInstantiator.createUsingDefault(ctxt);
+			// [databind#631]: Assign current value, to be accessible by custom serializers
+			p.setCurrentValue(bean);
+			String propName = p.getCurrentName();
+			do {
+				p.nextToken();
+				SettableBeanProperty prop = _beanProperties.find(propName);
+
+				if (prop != null) { // normal case
+					try {
+						prop.deserializeAndSet(p, ctxt, bean);
+					} catch (Exception e) {
+						wrapAndThrow(e, bean, propName, ctxt);
+					}
+					continue;
+				}
+				handleUnknownVanilla(p, ctxt, bean, propName);
+			} while ((propName = p.nextFieldName()) != null);
+			return bean;
+		}
+		return null;
 	}
 
 	/**
