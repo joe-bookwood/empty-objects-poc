@@ -11,12 +11,11 @@ This cause empty entries in the database. The problem ist discussed at
 The important classes to solve the problem:
 
 *   Jackson configuration is located in `de.bitc.emptyobjectspoc.EmptyObjectsPocApplication`
-*   The wrapped bean deserializer is located in `de.bitc.jackson.IsEmptyDeserializationWrapper`
+*   The fixed wrapped bean deserializer is located in `de.bitc.jackson.IsEmptyDeserializationWrapper`
 
 ## Build and run
 To build this project `java 11` and `maven` is needed.
-At first enter the main folder `empty-objects-poc`. To build the app, run `mvn -DskipTests package`,
-skip the tests, because the test will fail. The test check the correct answer without empty objects from the rest controller. To run the test use `mvn test` or `mvn package`. 
+At first enter the main folder `empty-objects-poc`. To build the app, run `mvn package`. The test check the correct answer without empty objects from the rest controller. To run the test use `mvn test` or `mvn package`. 
 
 To run the app use `java -jar target/empty-objects-poc-0.0.1-SNAPSHOT.jar` .
 
@@ -27,7 +26,7 @@ To send a test json:
 	   http://localhost:8080/company
 
 Keep the focus on the empty json object `"car" : {}`, it will be stored in the database as empty object
-and the answer looks like:
+and the old answer looks like:
 
 	{
 	  "id" : 1,
