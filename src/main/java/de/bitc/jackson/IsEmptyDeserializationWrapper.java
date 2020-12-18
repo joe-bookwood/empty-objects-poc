@@ -1,6 +1,8 @@
 package de.bitc.jackson;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,13 +74,39 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 				}
 				handleUnknownVanilla(p, ctxt, bean, propName);
 			} while ((propName = p.nextFieldName()) != null);
+			if(isEmpty(bean)) {
+				return null;
+			}
 			return bean;
 		}
 		return null;
 	}
 
+	private Boolean isEmpty(Object o){
+          if(o == null) {
+            return true;
+          }
+          return Arrays.stream(o.getClass().getDeclaredFields()).filter(Field::isAccessible).map(df -> {
+            Object field = null;
+            try {
+                field = df.get(o);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            if(field == null) {
+                return Boolean.TRUE;
+            }
+            if(String.class.isAssignableFrom(field.getClass())){
+                String string = (String) field;
+                return string.isEmpty() ? Boolean.TRUE : Boolean.FALSE;
+            }
+            return Boolean.FALSE;
+			}).anyMatch(Boolean::booleanValue);
+      }
+
+	
 	/**
-	 * General version used when handling needs more advanced features.
+	 * Used for understanding. It's a copy of the original method with inserted debug markers, used for debugging
 	 */
 	@Override
 	public Object deserializeFromObject(JsonParser p, DeserializationContext ctxt) throws IOException {
