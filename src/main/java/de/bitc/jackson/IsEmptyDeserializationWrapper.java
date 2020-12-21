@@ -1,13 +1,19 @@
 package de.bitc.jackson;
 
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.HashSet;
-import java.util.Set;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -20,7 +26,6 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 	private static final long serialVersionUID = -740637402884972568L;
 
 	private static final Logger logger = LoggerFactory.getLogger(IsEmptyDeserializationWrapper.class);
-
 
 	public IsEmptyDeserializationWrapper(BeanDeserializerBase src) {
 		super(src);
@@ -63,10 +68,8 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 			String propName = p.getCurrentName();
 			Set<String> props = new HashSet<>();
 			do {
-				logger.debug("{}:isEmptyVanillaDeserialize {}: propname {}",
-					     props.size(), 
-					     bean.getClass().getSimpleName(),
-					     propName);
+				logger.debug("{}:isEmptyVanillaDeserialize {}: propname {}", props.size(),
+						bean.getClass().getSimpleName(), propName);
 				p.nextToken();
 				SettableBeanProperty prop = _beanProperties.find(propName);
 
@@ -82,7 +85,8 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 				props.add(propName);
 				handleUnknownVanilla(p, ctxt, bean, propName);
 			} while ((propName = p.nextFieldName()) != null);
-			if(isEmpty(bean, props)) {
+			if (isEmpty(bean, props)) {
+				logger.debug("bean {} is empty", bean.getClass().getSimpleName());
 				return null;
 			}
 			return bean;
@@ -90,53 +94,54 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 		return null;
 	}
 
-   private Boolean isEmpty(Object objectToCheck, Set<String> props) {
-        if (objectToCheck == null) {
-            return true;
-        }
+	private Boolean isEmpty(Object objectToCheck, Set<String> props) {
+		if (objectToCheck == null) {
+			return true;
+		}
 
-        try {
-            if (logger.isDebugEnabled()) {
-                String debug = Arrays.stream(Introspector.getBeanInfo(objectToCheck.getClass(), Object.class)
-                        .getPropertyDescriptors())
-                        .filter(pd -> props.contains(pd.getName())) // Uns interessieren nur die properties die auch im Json vorkommen
-                        .map(PropertyDescriptor::getReadMethod)
-                        .map(m -> ("(" + m.getName() + (emptyCheck(objectToCheck, m) ? "=null)" : "!=null)")))
-                        .collect(Collectors.joining(";"));
-                logger.debug("results of emptycheck {}: {}",objectToCheck.getClass().getSimpleName(), debug);
-            }
-            return Arrays.stream(Introspector.getBeanInfo(objectToCheck.getClass(), Object.class)
-                    .getPropertyDescriptors())
-                    .filter(pd -> props.contains(pd.getName())) // Uns interessieren nur die properties die auch im Json vorkommen
-                    .map(PropertyDescriptor::getReadMethod)
-                    .anyMatch(m -> emptyCheck(objectToCheck, m));
-        } catch (IntrospectionException e) {
-            logger.error("error in reflection occured", e);
-        }
-        // if an error occur, return false
-        return false;
-    }
+		try {
+			if (logger.isDebugEnabled()) {
+				String debug = Arrays
+						.stream(Introspector.getBeanInfo(objectToCheck.getClass(), Object.class)
+								.getPropertyDescriptors())
+						.filter(pd -> props.contains(pd.getName())) // we only want to discover existing json properties
+						.map(PropertyDescriptor::getReadMethod)
+						.map(m -> ("(" + m.getName() + (emptyCheck(objectToCheck, m) ? "=null)" : "!=null)")))
+						.collect(Collectors.joining(";"));
+				logger.debug("results of emptycheck {}: {}", objectToCheck.getClass().getSimpleName(), debug);
+			}
+			return Arrays
+					.stream(Introspector.getBeanInfo(objectToCheck.getClass(), Object.class).getPropertyDescriptors())
+					.filter(pd -> props.contains(pd.getName())) // we only want to discover existing json properties
+					.map(PropertyDescriptor::getReadMethod).allMatch(m -> emptyCheck(objectToCheck, m));
+		} catch (IntrospectionException e) {
+			logger.error("error in reflection occured", e);
+		}
+		// if an error occur, return false
+		return false;
+	}
 
-    private Boolean emptyCheck(Object objectToCheck, Method m) {
-        try {
-            Object value = m.invoke(objectToCheck);
-            if (value == null) {
-                return Boolean.TRUE;
-            }
-            if (value instanceof String) {
-                String str = (String) value;
-                if (str.isEmpty()) {
-                    return Boolean.TRUE;
-                }
-            }
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            logger.error("es ist beim optimieren des Json ein Error im Reflektion aufgetreten", e);
-        }
-        return Boolean.FALSE;
-    }
-	
+	private Boolean emptyCheck(Object objectToCheck, Method m) {
+		try {
+			Object value = m.invoke(objectToCheck);
+			if (value == null) {
+				return Boolean.TRUE;
+			}
+			if (value instanceof String) {
+				String str = (String) value;
+				if (str.isEmpty()) {
+					return Boolean.TRUE;
+				}
+			}
+		} catch (IllegalAccessException | InvocationTargetException e) {
+			logger.error("es ist beim optimieren des Json ein Error im Reflektion aufgetreten", e);
+		}
+		return Boolean.FALSE;
+	}
+
 	/**
-	 * Used for understanding. It's a copy of the original method with inserted debug markers, used for debugging
+	 * Used for understanding. It's a copy of the original method with inserted
+	 * debug markers, used for debugging
 	 */
 	@Override
 	public Object deserializeFromObject(JsonParser p, DeserializationContext ctxt) throws IOException {
