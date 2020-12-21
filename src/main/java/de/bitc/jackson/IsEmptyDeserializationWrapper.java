@@ -6,7 +6,8 @@ import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.HashSet;
+import java.util.Set;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonTokenId;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -60,21 +61,28 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 			// [databind#631]: Assign current value, to be accessible by custom serializers
 			p.setCurrentValue(bean);
 			String propName = p.getCurrentName();
+			Set<String> props = new HashSet<>();
 			do {
+				logger.debug("{}:isEmptyVanillaDeserialize {}: propname {}",
+					     props.size(), 
+					     bean.getClass().getSimpleName(),
+					     propName);
 				p.nextToken();
 				SettableBeanProperty prop = _beanProperties.find(propName);
 
 				if (prop != null) { // normal case
 					try {
+						props.add(prop.getName());
 						prop.deserializeAndSet(p, ctxt, bean);
 					} catch (Exception e) {
 						wrapAndThrow(e, bean, propName, ctxt);
 					}
 					continue;
 				}
+				props.add(propName);
 				handleUnknownVanilla(p, ctxt, bean, propName);
 			} while ((propName = p.nextFieldName()) != null);
-			if(isEmpty(bean)) {
+			if(isEmpty(bean, props)) {
 				return null;
 			}
 			return bean;
@@ -82,28 +90,50 @@ public class IsEmptyDeserializationWrapper extends BeanDeserializer {
 		return null;
 	}
 
-	private Boolean isEmpty(Object o){
-          if(o == null) {
+   private Boolean isEmpty(Object objectToCheck, Set<String> props) {
+        if (objectToCheck == null) {
             return true;
-          }
-          return Arrays.stream(o.getClass().getDeclaredFields()).filter(Field::isAccessible).map(df -> {
-            Object field = null;
-            try {
-                field = df.get(o);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+        }
+
+        try {
+            if (logger.isDebugEnabled()) {
+                String debug = Arrays.stream(Introspector.getBeanInfo(objectToCheck.getClass(), Object.class)
+                        .getPropertyDescriptors())
+                        .filter(pd -> props.contains(pd.getName())) // Uns interessieren nur die properties die auch im Json vorkommen
+                        .map(PropertyDescriptor::getReadMethod)
+                        .map(m -> ("(" + m.getName() + (emptyCheck(objectToCheck, m) ? "=null)" : "!=null)")))
+                        .collect(Collectors.joining(";"));
+                logger.debug("results of emptycheck {}: {}",objectToCheck.getClass().getSimpleName(), debug);
             }
-            if(field == null) {
+            return Arrays.stream(Introspector.getBeanInfo(objectToCheck.getClass(), Object.class)
+                    .getPropertyDescriptors())
+                    .filter(pd -> props.contains(pd.getName())) // Uns interessieren nur die properties die auch im Json vorkommen
+                    .map(PropertyDescriptor::getReadMethod)
+                    .anyMatch(m -> emptyCheck(objectToCheck, m));
+        } catch (IntrospectionException e) {
+            logger.error("error in reflection occured", e);
+        }
+        // if an error occur, return false
+        return false;
+    }
+
+    private Boolean emptyCheck(Object objectToCheck, Method m) {
+        try {
+            Object value = m.invoke(objectToCheck);
+            if (value == null) {
                 return Boolean.TRUE;
             }
-            if(String.class.isAssignableFrom(field.getClass())){
-                String string = (String) field;
-                return string.isEmpty() ? Boolean.TRUE : Boolean.FALSE;
+            if (value instanceof String) {
+                String str = (String) value;
+                if (str.isEmpty()) {
+                    return Boolean.TRUE;
+                }
             }
-            return Boolean.FALSE;
-			}).anyMatch(Boolean::booleanValue);
-      }
-
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            logger.error("es ist beim optimieren des Json ein Error im Reflektion aufgetreten", e);
+        }
+        return Boolean.FALSE;
+    }
 	
 	/**
 	 * Used for understanding. It's a copy of the original method with inserted debug markers, used for debugging
